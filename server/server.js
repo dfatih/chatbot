@@ -1,13 +1,14 @@
 import express from 'express'
 import * as dotenv from 'dotenv'
 import cors from 'cors'
-import OpenAI from 'openai'
+import { Configuration, OpenAIApi } from 'openai'
 
 dotenv.config()
 
-const openai = new OpenAI({
+const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
-});
+})
+const openai = new OpenAIApi(configuration)
 
 const app = express()
 app.use(cors())
@@ -21,28 +22,28 @@ app.get('/', async (req, res) => {
 
 app.post('/', async (req, res) => {
   try {
-    const prompt = req.body.prompt;
+    const prompt = req.body.prompt
 
-   const response = await openai.chat.completions.create({
-      model: "chatgpt-4o-latest",
-      messages: [],
-      response_format: {
-        "type": "text"
-      },
+    // Create a chat completion using the prompt provided by the user.
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo", // Use your desired model; adjust if necessary.
+      messages: [
+        { role: "user", content: prompt }
+      ],
       temperature: 1,
-      max_completion_tokens: 2048,
+      max_tokens: 2048,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0
-    });
+    })
 
     res.status(200).send({
-      bot: response.data.choices[0].text
-    });
+      bot: response.data.choices[0].message.content
+    })
 
   } catch (error) {
     console.error(error)
-    res.status(500).send('Something went wrong');
+    res.status(500).send('Something went wrong')
   }
 })
 
